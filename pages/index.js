@@ -1,65 +1,122 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import React from "react";
+import Head from "next/head";
+import styles from "../styles/Home.module.css";
 
-export default function Home() {
+export default function Home({ randomJoke, jokeCategories }) {
+  const [pickedCategory, setPickedCategory] = React.useState(null);
+  const [randomCategoryJoke, setRandomCategoryJoke] = React.useState(null);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [randomSearchJoke, setRandomSearchJoke] = React.useState(null);
+
+  async function getAPIResults({ endpoint, query }) {
+    const request = await fetch(`${endpoint}${query}`);
+    const results = await request.json();
+
+    return results;
+  }
+
+  function getRandomJokeFromArray(jokes, totalJokes) {
+    return jokes[Math.floor(Math.random() * totalJokes)]?.value;
+  }
+
+  async function getJokeFromPickedCategory(category) {
+    setSearchQuery("");
+    setRandomSearchJoke(null);
+
+    setPickedCategory(category);
+
+    const randomCategoryJokeResults = await getAPIResults({
+      endpoint: "https://api.chucknorris.io/jokes/random?category=",
+      query: category,
+    });
+    const randomCategoryJoke = randomCategoryJokeResults.value;
+
+    setRandomCategoryJoke(randomCategoryJoke);
+  }
+
+  async function getJokeFromSearch(query) {
+    setPickedCategory(null);
+    setRandomCategoryJoke(null);
+
+    const getJokeFromSearchResults = await getAPIResults({
+      endpoint: "https://api.chucknorris.io/jokes/search?query=",
+      query,
+    });
+    const randomSearchJoke = getRandomJokeFromArray(
+      getJokeFromSearchResults.result,
+      getJokeFromSearchResults.total
+    );
+
+    setRandomSearchJoke(randomSearchJoke);
+  }
+
   return (
     <div className={styles.container}>
       <Head>
-        <title>Create Next App</title>
+        <title>Chuckopedia</title>
         <link rel="icon" href="/favicon.ico" />
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+        />
       </Head>
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+      <div>
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+        <h1>Chuckopedia</h1>
+        <p>Best database about Chuck&nbsp;Norris</p>
+        <h2>{randomSearchJoke || randomCategoryJoke || randomJoke.value}</h2>
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+        <h3>
+          {pickedCategory ? <span>Category: {pickedCategory}</span> : null}
+        </h3>
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+        <div>
+          {jokeCategories.map((jokeCategory) => (
+            <ul key={jokeCategory}>
+              <li>
+                <a
+                  href="#"
+                  onClick={() => {
+                    getJokeFromPickedCategory(jokeCategory);
+                  }}
+                >
+                  {jokeCategory}
+                </a>
+              </li>
+            </ul>
+          ))}
         </div>
-      </main>
 
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
+        <input
+          type="text"
+          placeholder="Search joke"
+          value={searchQuery}
+          onChange={(e) => {
+            const value = e.target.value;
+            setSearchQuery(value);
+
+            // 3 characters are needed for successful searching in API
+            if (value.length >= 3) {
+              getJokeFromSearch(value);
+            }
+          }}
+        />
+      </div>
     </div>
-  )
+  );
 }
+
+Home.getInitialProps = async (ctx) => {
+  const randomJokeRequest = await fetch(
+    "https://api.chucknorris.io/jokes/random"
+  );
+  const randomJoke = await randomJokeRequest.json();
+
+  const jokeCategoriesRequest = await fetch(
+    "https://api.chucknorris.io/jokes/categories"
+  );
+  const jokeCategories = await jokeCategoriesRequest.json();
+
+  return { randomJoke, jokeCategories };
+};
