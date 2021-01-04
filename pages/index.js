@@ -1,6 +1,8 @@
 import React from "react";
 import Head from "next/head";
-import styles from "../styles/Home.module.css";
+import Container from "@material-ui/core/Container";
+import Box from "@material-ui/core/Box";
+
 
 export default function Home({ randomJoke, jokeCategories }) {
   const [pickedCategory, setPickedCategory] = React.useState(null);
@@ -51,27 +53,44 @@ export default function Home({ randomJoke, jokeCategories }) {
   }
 
   return (
-    <div className={styles.container}>
+    <div>
       <Head>
         <title>Chuckopedia</title>
         <link rel="icon" href="/favicon.ico" />
         <link
           rel="stylesheet"
-          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"
+          href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&amp;display=swap"
         />
       </Head>
+      <Container maxWidth="md">
+        <Box
+          display="flex"
+          flexDirection="column"
+          align="center"
+          p={5}
+          m={1}
+          bgcolor="error.main"
+          border={2}
+          borderTop={0}
+          borderColor="grey.500"
+          borderRadius="2%"
+        >
+          <h1>Chuckopedia</h1>
+          <p>The Worst Database about Chuck&nbsp;Norris</p>
+        </Box>
+        <Box display="flex" align="center">
+          <h2>{randomSearchJoke || randomCategoryJoke || randomJoke.value}</h2>
+          <h3>
+            {pickedCategory ? <span>Category: {pickedCategory}</span> : null}
+          </h3>
+        </Box>
 
-      <div>
-
-        <h1>Chuckopedia</h1>
-        <p>Best database about Chuck&nbsp;Norris</p>
-        <h2>{randomSearchJoke || randomCategoryJoke || randomJoke.value}</h2>
-
-        <h3>
-          {pickedCategory ? <span>Category: {pickedCategory}</span> : null}
-        </h3>
-
-        <div>
+        <Box
+          display="flex"
+          flexDirection="row"
+          flexWrap="wrap"
+          justifyContent="center"
+        >
           {jokeCategories.map((jokeCategory) => (
             <ul key={jokeCategory}>
               <li>
@@ -86,23 +105,24 @@ export default function Home({ randomJoke, jokeCategories }) {
               </li>
             </ul>
           ))}
-        </div>
+        </Box>
+        <Box display="flex" align="center">
+          <input
+            type="text"
+            placeholder="Search joke"
+            value={searchQuery}
+            onChange={(e) => {
+              const value = e.target.value;
+              setSearchQuery(value);
 
-        <input
-          type="text"
-          placeholder="Search joke"
-          value={searchQuery}
-          onChange={(e) => {
-            const value = e.target.value;
-            setSearchQuery(value);
-
-            // 3 characters are needed for successful searching in API
-            if (value.length >= 3) {
-              getJokeFromSearch(value);
-            }
-          }}
-        />
-      </div>
+              // 3 characters are needed for successful searching in API
+              if (value.length >= 3) {
+                getJokeFromSearch(value);
+              }
+            }}
+          />
+        </Box>
+      </Container>
     </div>
   );
 }
